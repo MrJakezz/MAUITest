@@ -1,0 +1,16 @@
+image: mcr.microsoft.com/dotnet/runtime:8.0
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - dotnet build --configuration Release
+    - dotnet publish -c Release -o ./bin/Release
+
+deploy:
+  stage: deploy
+  script:
+    - gitlab-ci-release upload ./bin/Release/myapp.apk
