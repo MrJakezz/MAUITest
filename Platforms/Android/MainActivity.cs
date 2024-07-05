@@ -14,13 +14,14 @@ namespace MAUISilentUpdateTestApplication;
 public class MainActivity : MauiAppCompatActivity
 {
     public required IAppUpdateManager _appUpdateManager;
+    private GitHubService _gitHubService;
     private const int REQUEST_CODE_UPDATE = 100;
-    private GitLabService _gitLabService;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        _gitLabService = new GitLabService("glpat-9V-M4dbMuX6EteoArhp2", "117");
+
+        _gitHubService = new GitHubService("github_token", "owner", "repo");
 
         _appUpdateManager = AppUpdateManagerFactory.Create(this);
         CheckForUpdate();
@@ -36,7 +37,37 @@ public class MainActivity : MauiAppCompatActivity
             {
                 StartUpdate(appUpdateInfo);
             }
+            else
+            {
+                CheckForGitHubUpdate();
+            }
         }));
+    }
+
+    private async void CheckForGitHubUpdate()
+    {
+        try
+        {
+            var latestVersion = await _gitHubService.GetLatestVersionFromGitHub();
+            var currentVersion = AppInfo.VersionString;
+
+            if (currentVersion != latestVersion)
+            {
+                ShowUpdateNotification();
+                var latestRelease = await _gitHubService.DownloadLatestAssetFromGitHub("update.apk", GetLatestAssetUrl());
+                InstallApk(latestRelease.Content);
+            }
+        }
+        catch (Exception ex)
+        {
+            RunOnUiThread(() =>
+            {
+                if (this != null)
+                {
+                    Toast.MakeText(this, "GitHub update check failed: " + ex.Message, ToastLength.Short).Show();
+                }
+            });
+        }
     }
 
     private void StartUpdate(AppUpdateInfo appUpdateInfo)
@@ -55,54 +86,58 @@ public class MainActivity : MauiAppCompatActivity
             }));
     }
 
-    private async void StartUpdateFromGitLab()
+    private void InstallApk(byte[] apkBytes)
     {
-        string apkUrl = "";
         string apkFileName = "update.apk";
         string apkFilePath = System.IO.Path.Combine(CacheDir.AbsolutePath, apkFileName);
 
-        using (var client = new HttpClient())
+        try
         {
-            try
-            {
-                var response = await client.GetAsync(apkUrl);
-                response.EnsureSuccessStatusCode();
-                var apkBytes = await response.Content.ReadAsByteArrayAsync();
-                System.IO.File.WriteAllBytes(apkFilePath, apkBytes);
+            System.IO.File.WriteAllBytes(apkFilePath, apkBytes);
 
-                RunOnUiThread(() =>
-                {
-                    if (this != null)
-                    {
-                        Toast.MakeText(this, "Update downloaded, installing...", ToastLength.Short).Show();
-                    }
-                });
-
-                InstallApk(apkFilePath);
-            }
-            catch (Exception ex)
+            RunOnUiThread(() =>
             {
-                RunOnUiThread(() =>
+                if (this != null)
                 {
-                    if (this != null)
-                    {
-                        Toast.MakeText(this, "Update download failed: " + ex.Message, ToastLength.Short).Show();
-                    }
-                });
-            }
+                    Toast.MakeText(this, "Update downloaded, installing...", ToastLength.Short).Show();
+                }
+            });
+
+            var apkUri = FileProvider.GetUriForFile(this, ApplicationContext.PackageName + ".provider", new Java.IO.File(apkFilePath));
+
+            var intent = new Intent(Intent.ActionView);
+            intent.SetDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.AddFlags(ActivityFlags.GrantReadUriPermission);
+            intent.AddFlags(ActivityFlags.NewTask);
+
+            StartActivity(intent);
+        }
+        catch (Exception ex)
+        {
+            RunOnUiThread(() =>
+            {
+                if (this != null)
+                {
+                    Toast.MakeText(this, "Update install failed: " + ex.Message, ToastLength.Short).Show();
+                }
+            });
         }
     }
 
-    private void InstallApk(string apkFilePath)
+    private void ShowUpdateNotification()
     {
-        var apkUri = FileProvider.GetUriForFile(this, ApplicationContext.PackageName + ".provider", new Java.IO.File(apkFilePath));
+        RunOnUiThread(() =>
+        {
+            if (this != null)
+            {
+                Toast.MakeText(this, "New update available from GitHub!", ToastLength.Short).Show();
+            }
+        });
+    }
 
-        var intent = new Intent(Intent.ActionView);
-        intent.SetDataAndType(apkUri, "application/vnd.android.package-archive");
-        intent.AddFlags(ActivityFlags.GrantReadUriPermission);
-        intent.AddFlags(ActivityFlags.NewTask);
-
-        StartActivity(intent);
+    private string GetLatestAssetUrl()
+    {
+        return "https://github.com/owner/repo/releases/download/latest/update.apk";
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
@@ -114,30 +149,8 @@ public class MainActivity : MauiAppCompatActivity
 
         base.OnActivityResult(requestCode, resultCode, data);
     }
-
-    private async void CheckForGitLabUpdate()
-    {
-        var latestVersion = await _gitLabService.GetLatestVersionFromGitLab();
-        var currentVersion = AppInfo.VersionString;
-
-        if (currentVersion != latestVersion)
-        {
-            ShowUpdateNotification();
-            StartUpdateFromGitLab();
-        }
-    }
-
-    private void ShowUpdateNotification()
-    {
-        RunOnUiThread(() =>
-        {
-            if (this != null)
-            {
-                Toast.MakeText(this, "New update available from GitLab!", ToastLength.Short).Show();
-            }
-        });
-    }
 }
+
 
 public class OnSuccessListener : Java.Lang.Object, IOnSuccessListener
 {
