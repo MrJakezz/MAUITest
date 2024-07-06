@@ -113,6 +113,23 @@ public class MainActivity : MauiAppCompatActivity
             intent.AddFlags(ActivityFlags.NewTask);
 
             StartActivity(intent);
+
+            RunOnUiThread(() =>
+            {
+                if (this != null)
+                {
+                    Toast.MakeText(this, "Update installed successfully. Restarting app...", ToastLength.Short).Show();
+                    var handler = new Handler();
+                    handler.PostDelayed(() =>
+                    {
+                        var packageManager = PackageManager;
+                        var intent = packageManager.GetLaunchIntentForPackage(PackageName);
+                        intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask);
+                        StartActivity(intent);
+                        Java.Lang.JavaSystem.Exit(0);
+                    }, 2000); 
+                }
+            });
         }
         catch (Exception ex)
         {
