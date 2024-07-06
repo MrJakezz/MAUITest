@@ -107,7 +107,7 @@ public class MainActivity : MauiAppCompatActivity
 
             var apkUri = FileProvider.GetUriForFile(this, ApplicationContext.PackageName + ".provider", new Java.IO.File(apkFilePath));
 
-            var intent = new Intent(Intent.ActionView);
+            var intent = new Intent(Intent.ActionInstallPackage);
             intent.SetDataAndType(apkUri, "application/vnd.android.package-archive");
             intent.AddFlags(ActivityFlags.GrantReadUriPermission);
             intent.AddFlags(ActivityFlags.NewTask);
@@ -127,7 +127,7 @@ public class MainActivity : MauiAppCompatActivity
                         intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.NewTask);
                         StartActivity(intent);
                         Java.Lang.JavaSystem.Exit(0);
-                    }, 2000); 
+                    }, 5000); 
                 }
             });
         }
