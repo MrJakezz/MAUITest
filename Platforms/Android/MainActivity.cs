@@ -21,7 +21,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
-        _gitHubService = new GitHubService("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", "MrJakezz", "MAUITest");
+        _gitHubService = new GitHubService("MrJakezz", "MAUITest");
 
         _appUpdateManager = AppUpdateManagerFactory.Create(this);
         CheckForUpdate();

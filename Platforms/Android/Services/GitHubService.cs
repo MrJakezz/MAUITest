@@ -5,13 +5,12 @@ using System.Text.Json;
 namespace MAUISilentUpdateTestApplication.Platforms.Android.Services;
 public class GitHubService
 {
-    private readonly string _gitHubToken;
+    //private readonly string _gitHubToken;
     private readonly string _owner;
     private readonly string _repo;
 
-    public GitHubService(string gitHubToken, string owner, string repo)
+    public GitHubService(string owner, string repo)
     {
-        _gitHubToken = gitHubToken;
         _owner = owner;
         _repo = repo;
     }
@@ -20,7 +19,7 @@ public class GitHubService
     {
         using (var client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
+            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
 
             var response = await client.GetAsync($"https://api.github.com/repos/{_owner}/{_repo}/releases/latest");
             response.EnsureSuccessStatusCode();
@@ -41,7 +40,7 @@ public class GitHubService
     {
         using (var client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
+            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
 
             var response = await client.GetAsync(assetUrl);
             response.EnsureSuccessStatusCode();
