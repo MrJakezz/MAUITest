@@ -21,7 +21,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
-        _gitHubService = new GitHubService("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", "MrJakezz", "MAUITest");
+        _gitHubService = new GitHubService("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", "MrJakezz", "MAUITest");
 
         _appUpdateManager = AppUpdateManagerFactory.Create(this);
         CheckForUpdate();
@@ -54,7 +54,9 @@ public class MainActivity : MauiAppCompatActivity
             if (currentVersion != latestVersion)
             {
                 ShowUpdateNotification();
-                var latestRelease = await _gitHubService.DownloadLatestAssetFromGitHub("update.apk", GetLatestAssetUrl());
+                var assetUrl = await GetLatestAssetUrl();
+
+                var latestRelease = await _gitHubService.DownloadLatestAssetFromGitHub("com.companyname.mauisilentupdatetestapplication-Signed.apk", assetUrl);
                 InstallApk(latestRelease.Content);
             }
         }
@@ -88,7 +90,7 @@ public class MainActivity : MauiAppCompatActivity
 
     private void InstallApk(byte[] apkBytes)
     {
-        string apkFileName = "update.apk";
+        string apkFileName = "com.companyname.mauisilentupdatetestapplication-Signed.apk";
         string apkFilePath = System.IO.Path.Combine(CacheDir.AbsolutePath, apkFileName);
 
         try
@@ -135,9 +137,12 @@ public class MainActivity : MauiAppCompatActivity
         });
     }
 
-    private string GetLatestAssetUrl()
+    private async Task<string> GetLatestAssetUrl()
     {
-        return "https://github.com/owner/repo/releases/download/latest/update.apk";
+        var latestVersion = await _gitHubService.GetLatestVersionFromGitHub();
+        string response = $"https://github.com/MrJakezz/MAUITest/releases/download/{latestVersion}/com.companyname.mauisilentupdatetestapplication-Signed.apk";
+
+        return response;
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
