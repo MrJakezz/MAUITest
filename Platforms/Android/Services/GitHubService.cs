@@ -19,8 +19,6 @@ public class GitHubService
     {
         using (var client = new HttpClient())
         {
-            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
-
             var response = await client.GetAsync($"https://api.github.com/repos/{_owner}/{_repo}/releases/latest");
             response.EnsureSuccessStatusCode();
 
@@ -40,8 +38,6 @@ public class GitHubService
     {
         using (var client = new HttpClient())
         {
-            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _gitHubToken);
-
             var response = await client.GetAsync(assetUrl);
             response.EnsureSuccessStatusCode();
 
